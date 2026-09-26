@@ -11,19 +11,7 @@ interface TeamGridClientProps {
 }
 
 export default function TeamGridClient({ initialMembers }: TeamGridClientProps) {
-  const [members, setMembers] = useState<TeamMember[]>(initialMembers);
-
-  useEffect(() => {
-    // Fetch latest team data from CMS API on client side
-    fetch('/api/cms/team')
-      .then((res) => res.json())
-      .then((data: TeamMember[]) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setMembers(data);
-        }
-      })
-      .catch((err) => console.error('Failed to update team data client-side', err));
-  }, []);
+  const [members] = useState<TeamMember[]>(initialMembers);
 
   return (
     <section className="pt-8 pb-20 md:pt-12 md:pb-28 bg-white" aria-labelledby="team-heading">

@@ -55,18 +55,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 }
 
 export default function ProjectGrid({ initialProjects = [] }: { initialProjects?: Project[] }) {
-  const [projectList, setProjectList] = useState<Project[]>(initialProjects);
-
-  useEffect(() => {
-    fetch('/api/cms/projects')
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setProjectList(data);
-        }
-      })
-      .catch((err) => console.error(err));
-  }, []);
+  const [projectList] = useState<Project[]>(initialProjects);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
