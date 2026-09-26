@@ -20,6 +20,7 @@ export default function ProjectsManager() {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingProject, setEditingProject] = useState<Partial<Project> | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchProjects();
@@ -63,6 +64,7 @@ export default function ProjectsManager() {
     e.preventDefault();
     if (!editingProject || !editingProject.name) return;
 
+    setSaving(true);
     const method = isNew ? 'POST' : 'PUT';
     try {
       const res = await fetch('/api/cms/projects', {
@@ -71,12 +73,18 @@ export default function ProjectsManager() {
         body: JSON.stringify(editingProject),
       });
 
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         setEditingProject(null);
         fetchProjects();
+      } else {
+        alert(data.message || 'Error saving project. Please check network/file sizes.');
       }
     } catch (err) {
-      alert('Error saving project');
+      console.error(err);
+      alert('Error saving project. Server request failed.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -85,8 +93,11 @@ export default function ProjectsManager() {
 
     try {
       const res = await fetch(`/api/cms/projects?id=${id}`, { method: 'DELETE' });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         fetchProjects();
+      } else {
+        alert(data.message || 'Failed to delete project');
       }
     } catch (err) {
       alert('Failed to delete project');
@@ -394,9 +405,10 @@ export default function ProjectsManager() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-[#0D7A9E] hover:bg-[#0A2333] text-white rounded-xl font-sans text-xs font-semibold uppercase tracking-wider flex items-center gap-2 shadow"
+                  disabled={saving}
+                  className="px-6 py-2.5 bg-[#0D7A9E] hover:bg-[#0A2333] text-white rounded-xl font-sans text-xs font-semibold uppercase tracking-wider flex items-center gap-2 shadow disabled:opacity-50"
                 >
-                  <Save size={16} /> Save Project
+                  <Save size={16} /> {saving ? 'Saving Project...' : 'Save Project'}
                 </button>
               </div>
             </form>
