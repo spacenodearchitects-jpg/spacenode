@@ -14,7 +14,7 @@ const fallbackTeam: TeamMember[] = [
     slug: 'jeffin-kuncheria-varghese',
     name: 'Ar. Jeffin Kuncheria Varghese', 
     title: 'Founder & Principal Architect', 
-    image: '/images/team/jeffin.jpg', 
+    image: '/images/team/jeffin.png', 
     highlights: [
       "Founded Space Node Architects in 2017",
       "Focuses on functional, context-driven design",
@@ -30,7 +30,7 @@ const fallbackTeam: TeamMember[] = [
     slug: 'jinsa-reji',
     name: 'Ar. Jinsa Reji', 
     title: 'Design Head & Co-founder', 
-    image: '/images/team/jinsa.jpg', 
+    image: '/images/team/jinsa.png', 
     highlights: [
       "Leads the studio's creative direction",
       "Expertise across India, UAE, and Australia",
@@ -47,7 +47,7 @@ const fallbackTeam: TeamMember[] = [
     slug: 'bibite-joy',
     name: 'Ar. Bibite Joy', 
     title: 'Associate Architect', 
-    image: '/images/team/bibite.jpg', 
+    image: '/images/team/bibite.png', 
     highlights: [
       "Over a decade of professional experience",
       "Expert in large-scale & complex projects",
@@ -63,7 +63,7 @@ const fallbackTeam: TeamMember[] = [
     slug: 'george-zacharia-mathew',
     name: 'Ar. George Zacharia Mathew', 
     title: 'Consulting Architect', 
-    image: '/images/team/george.jpg', 
+    image: '/images/team/george.png', 
     highlights: [
       "10+ years of architectural experience",
       "Focuses on sustainable, context-driven design",
