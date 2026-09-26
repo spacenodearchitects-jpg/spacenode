@@ -5,19 +5,20 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight, MapPin, Calendar, Tag } from 'lucide-react';
 import RevealWrapper from '@/components/ui/RevealWrapper';
 import NodeMesh from '@/components/ui/NodeMesh';
-import { getProjectBySlug, getRelatedProjects, getProjects } from '@/lib/projects';
+import { getProjects, Project } from '@/lib/projects';
+import { readStoreAsync } from '@/lib/cms-store';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  return getProjects().map((p) => ({ slug: p.slug }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const project = getProjectBySlug(slug);
+  const projects = await readStoreAsync<Project[]>('projects.json', getProjects());
+  const project = projects.find((p) => p.slug === slug || p.id === slug);
   if (!project) return { title: 'Project Not Found' };
   return {
     title: project.name,
@@ -27,10 +28,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { slug } = await params;
-  const project = getProjectBySlug(slug);
+  const projects = await readStoreAsync<Project[]>('projects.json', getProjects());
+  const project = projects.find((p) => p.slug === slug || p.id === slug);
   if (!project) notFound();
 
-  const related = getRelatedProjects(project.slug, project.category);
+  const related = projects
+    .filter((p) => p.slug !== project.slug && p.id !== project.id && p.category === project.category)
+    .slice(0, 3);
 
   return (
     <>
@@ -104,8 +108,6 @@ export default async function ProjectDetailPage({ params }: Props) {
           </div>
         </section>
       )}
-
-      {/* Concept Diagram Removed */}
 
       {/* Related Projects */}
       {related.length > 0 && (

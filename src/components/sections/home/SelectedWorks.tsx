@@ -1,14 +1,25 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
 import RevealWrapper from '@/components/ui/RevealWrapper';
-import { getFeaturedProjects } from '@/lib/projects';
+import { getFeaturedProjects, Project } from '@/lib/projects';
 
 export default function SelectedWorks() {
-  const featured = getFeaturedProjects();
+  const [featured, setFeatured] = useState<Project[]>(getFeaturedProjects());
+
+  useEffect(() => {
+    fetch('/api/cms/projects')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setFeatured(data.filter((p: Project) => p.featured));
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   return (
     <section className="py-32 md:py-40 bg-white" aria-labelledby="selected-works-heading">
@@ -37,7 +48,7 @@ export default function SelectedWorks() {
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
           {featured.map((project, i) => (
-            <RevealWrapper key={project.id} delay={i * 0.1}>
+            <RevealWrapper key={project.id || project.slug} delay={i * 0.1}>
               <Link href={`/projects/${project.slug}`} className="group block">
                 {/* Image */}
                 <div className="overflow-hidden aspect-[4/5] mb-5 relative bg-[#F8F9FA]">
@@ -63,7 +74,7 @@ export default function SelectedWorks() {
                       {project.name}
                     </h3>
                     <p className="font-sans text-[10px] tracking-[0.15em] uppercase text-[#6B7280]">
-                      {project.location} · {project.type.split('/')[0].trim()}
+                      {project.location} · {project.type ? project.type.split('/')[0].trim() : project.category}
                     </p>
                   </div>
                   <span className="font-sans text-[10px] tracking-[0.1em] text-[#0D7A9E] font-semibold mt-0.5">
