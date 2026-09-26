@@ -9,6 +9,7 @@ export function readStore<T>(filename: string, fallback: T): T {
   if (memoryCache[filename]) {
     return memoryCache[filename] as T;
   }
+
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const fs = require('fs');
@@ -50,6 +51,10 @@ export async function readStoreAsync<T>(filename: string, fallback: T): Promise<
     return fallback;
   }
 
+  if (memoryCache[filename]) {
+    return memoryCache[filename] as T;
+  }
+
   // 1. Try reading cloud-persisted store from Supabase Storage
   try {
     const supabaseKey = `store_${filename}`;
@@ -61,6 +66,14 @@ export async function readStoreAsync<T>(filename: string, fallback: T): Promise<
       const text = await fileData.text();
       const parsed = JSON.parse(text) as T;
       memoryCache[filename] = parsed;
+
+      // Sync to /tmp for fast synchronous reads in same lambda
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        fs.writeFileSync(path.join('/tmp', filename), JSON.stringify(parsed, null, 2), 'utf-8');
+      } catch (e) {}
+
       return parsed;
     }
   } catch (e) {
@@ -130,12 +143,16 @@ export async function writeStoreAsync<T>(filename: string, data: T): Promise<boo
   try {
     const supabaseKey = `store_${filename}`;
     const jsonBuffer = Buffer.from(JSON.stringify(data, null, 2), 'utf-8');
-    await supabase.storage
+    const { error } = await supabase.storage
       .from('media')
       .upload(supabaseKey, jsonBuffer, {
         contentType: 'application/json',
         upsert: true,
       });
+
+    if (error) {
+      console.warn(`Supabase cloud store upload warning for ${filename}:`, error.message);
+    }
   } catch (e) {
     console.warn(`Supabase store upload failed for ${filename}:`, e);
   }
