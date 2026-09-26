@@ -15,10 +15,30 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+function findProjectBySlug(projects: Project[], targetSlug: string): Project | undefined {
+  const rawSlug = decodeURIComponent(targetSlug || '').toLowerCase().trim();
+  const cleanSlug = rawSlug.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  return projects.find((p) => {
+    if (!p) return false;
+    const pSlug = (p.slug || '').toLowerCase().trim();
+    const pCleanSlug = pSlug.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const pNameSlug = (p.name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    return (
+      p.id === targetSlug ||
+      p.id === rawSlug ||
+      pSlug === rawSlug ||
+      pCleanSlug === cleanSlug ||
+      pNameSlug === cleanSlug
+    );
+  });
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const projects = await readStoreAsync<Project[]>('projects.json', getProjects());
-  const project = projects.find((p) => p.slug === slug || p.id === slug);
+  const project = findProjectBySlug(projects, slug);
   if (!project) return { title: 'Project Not Found' };
   return {
     title: project.name,
@@ -29,8 +49,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProjectDetailPage({ params }: Props) {
   const { slug } = await params;
   const projects = await readStoreAsync<Project[]>('projects.json', getProjects());
-  const project = projects.find((p) => p.slug === slug || p.id === slug);
-  if (!project) notFound();
+  const project = findProjectBySlug(projects, slug);
+
+  if (!project) {
+    notFound();
+  }
 
   const related = projects
     .filter((p) => p.slug !== project.slug && p.id !== project.id && p.category === project.category)
