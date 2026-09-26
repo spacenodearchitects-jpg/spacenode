@@ -55,9 +55,14 @@ export default async function ProjectDetailPage({ params }: Props) {
     notFound();
   }
 
-  const related = projects
-    .filter((p) => p.slug !== project.slug && p.id !== project.id && p.category === project.category)
-    .slice(0, 3);
+  const relatedCategory = projects.filter(
+    (p) => p.slug !== project.slug && p.id !== project.id && p.category === project.category
+  );
+  const related = (
+    relatedCategory.length > 0
+      ? relatedCategory
+      : projects.filter((p) => p.slug !== project.slug && p.id !== project.id)
+  ).slice(0, 3);
 
   const heroImageSrc = project.heroImage || project.image;
 
@@ -71,7 +76,7 @@ export default async function ProjectDetailPage({ params }: Props) {
             alt={project.name}
             fill
             priority
-            unoptimized={heroImageSrc.startsWith('data:')}
+                    unoptimized
             sizes="100vw"
             className="object-cover"
           />
@@ -156,7 +161,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                     src={img}
                     alt={`${project.name} — view ${i + 1}`}
                     fill
-                    unoptimized={img.startsWith('data:')}
+                    unoptimized
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover hover:scale-105 transition-transform duration-700"
                   />
@@ -186,7 +191,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                   <Link href={`/projects/${p.slug || p.id}`} className="group block">
                     <div className="overflow-hidden aspect-[4/3] mb-4 relative rounded-xl">
                       <Image src={p.image} alt={p.name} fill
-                        unoptimized={p.image.startsWith('data:')}
+                        unoptimized
                         sizes="(max-width: 768px) 100vw, 33vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     </div>
