@@ -14,7 +14,7 @@ const fallbackTeam: TeamMember[] = [
     slug: 'jeffin-kuncheria-varghese',
     name: 'Ar. Jeffin Kuncheria Varghese', 
     title: 'Founder & Principal Architect', 
-    image: '', 
+    image: '/images/team/jeffin.jpg', 
     highlights: [
       "Founded Space Node Architects in 2017",
       "Focuses on functional, context-driven design",
@@ -30,7 +30,7 @@ const fallbackTeam: TeamMember[] = [
     slug: 'jinsa-reji',
     name: 'Ar. Jinsa Reji', 
     title: 'Design Head & Co-founder', 
-    image: '', 
+    image: '/images/team/jinsa.jpg', 
     highlights: [
       "Leads the studio's creative direction",
       "Expertise across India, UAE, and Australia",
@@ -47,7 +47,7 @@ const fallbackTeam: TeamMember[] = [
     slug: 'bibite-joy',
     name: 'Ar. Bibite Joy', 
     title: 'Associate Architect', 
-    image: '', 
+    image: '/images/team/bibite.jpg', 
     highlights: [
       "Over a decade of professional experience",
       "Expert in large-scale & complex projects",
@@ -63,7 +63,7 @@ const fallbackTeam: TeamMember[] = [
     slug: 'george-zacharia-mathew',
     name: 'Ar. George Zacharia Mathew', 
     title: 'Consulting Architect', 
-    image: '', 
+    image: '/images/team/george.jpg', 
     highlights: [
       "10+ years of architectural experience",
       "Focuses on sustainable, context-driven design",
@@ -85,3 +85,4 @@ export const getTeam = (): TeamMember[] => {
 };
 
 export const team: TeamMember[] = getTeam();
+

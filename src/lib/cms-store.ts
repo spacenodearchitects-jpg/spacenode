@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 
 const memoryCache: Record<string, any> = {};
+const verifiedCacheKeys = new Set<string>();
 
 export function readStore<T>(filename: string, fallback: T): T {
   if (typeof window !== 'undefined') {
@@ -51,7 +52,8 @@ export async function readStoreAsync<T>(filename: string, fallback: T): Promise<
     return fallback;
   }
 
-  if (memoryCache[filename]) {
+  // Only return memoryCache if it was explicitly verified by Supabase or updated by writeStore
+  if (memoryCache[filename] && verifiedCacheKeys.has(filename)) {
     return memoryCache[filename] as T;
   }
 
@@ -66,6 +68,7 @@ export async function readStoreAsync<T>(filename: string, fallback: T): Promise<
       const text = await fileData.text();
       const parsed = JSON.parse(text) as T;
       memoryCache[filename] = parsed;
+      verifiedCacheKeys.add(filename);
 
       // Sync to /tmp for fast synchronous reads in same lambda
       try {
@@ -81,7 +84,9 @@ export async function readStoreAsync<T>(filename: string, fallback: T): Promise<
   }
 
   // 2. Fallback to synchronous file read
-  return readStore<T>(filename, fallback);
+  const diskData = readStore<T>(filename, fallback);
+  verifiedCacheKeys.add(filename);
+  return diskData;
 }
 
 export function writeStore<T>(filename: string, data: T): boolean {
@@ -91,6 +96,7 @@ export function writeStore<T>(filename: string, data: T): boolean {
 
   // Update in-memory cache immediately
   memoryCache[filename] = data;
+  verifiedCacheKeys.add(filename);
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
