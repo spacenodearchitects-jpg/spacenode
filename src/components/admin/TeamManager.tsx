@@ -22,6 +22,9 @@ export default function TeamManager() {
       const res = await fetch('/api/cms/team');
       const data = await res.json();
       setTeam(data);
+      try {
+        localStorage.setItem('spacenode_team_store', JSON.stringify(data));
+      } catch (e) {}
     } catch (err) {
       console.error('Failed to fetch team', err);
     } finally {

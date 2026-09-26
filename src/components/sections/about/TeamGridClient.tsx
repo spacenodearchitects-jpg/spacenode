@@ -11,7 +11,33 @@ interface TeamGridClientProps {
 }
 
 export default function TeamGridClient({ initialMembers }: TeamGridClientProps) {
-  const [members] = useState<TeamMember[]>(initialMembers);
+  const [members, setMembers] = useState<TeamMember[]>(initialMembers);
+
+  useEffect(() => {
+    // 1. Instant local sync for edits made in Admin CMS
+    try {
+      const stored = localStorage.getItem('spacenode_team_store');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMembers(parsed);
+        }
+      }
+    } catch (e) {}
+
+    // 2. Fetch latest server CMS data
+    fetch('/api/cms/team')
+      .then((res) => res.json())
+      .then((data: TeamMember[]) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setMembers(data);
+          try {
+            localStorage.setItem('spacenode_team_store', JSON.stringify(data));
+          } catch (e) {}
+        }
+      })
+      .catch((err) => console.error('Failed to sync team data', err));
+  }, []);
 
   return (
     <section className="pt-8 pb-20 md:pt-12 md:pb-28 bg-white" aria-labelledby="team-heading">
@@ -27,7 +53,7 @@ export default function TeamGridClient({ initialMembers }: TeamGridClientProps) 
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {members.map((member, i) => (
-            <RevealWrapper key={member.name} delay={i * 0.1}>
+            <RevealWrapper key={member.slug || member.name} delay={i * 0.1}>
               <div className="group">
                 <Link
                   href={`/team/${member.slug}`}
@@ -38,7 +64,7 @@ export default function TeamGridClient({ initialMembers }: TeamGridClientProps) 
                       src={member.image}
                       alt={member.name}
                       fill
-                      unoptimized={member.image.startsWith('data:')}
+                      unoptimized
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
                     />
