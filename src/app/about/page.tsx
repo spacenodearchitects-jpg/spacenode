@@ -3,10 +3,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import RevealWrapper from '@/components/ui/RevealWrapper';
-import NodeMesh from '@/components/ui/NodeMesh';
 import AboutTestimonials from '@/components/sections/about/AboutTestimonials';
-import { team } from '@/data/team';
+import { getTeam, TeamMember } from '@/data/team';
+import { readStoreAsync } from '@/lib/cms-store';
 import { getPageMetadata } from '@/lib/seo';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export function generateMetadata(): Metadata {
   return getPageMetadata('about');
@@ -15,7 +18,7 @@ export function generateMetadata(): Metadata {
 // --- HERO ---
 function AboutHero() {
   return (
-    <section className="relative pt-32 pb-0 bg-[#F8F9FA] overflow-hidden min-h-[50vh] flex items-end" aria-label="About hero">
+    <section className="relative pt-36 pb-0 bg-[#F8F9FA] overflow-hidden min-h-[45vh] flex items-end" aria-label="About hero">
       <div className="max-w-[1440px] mx-auto px-6 md:px-20 pb-12 w-full">
         <div className="w-full">
           <RevealWrapper>
@@ -65,7 +68,7 @@ function StudioStory() {
   );
 }
 
-function TeamGrid() {
+function TeamGrid({ members }: { members: TeamMember[] }) {
   return (
     <section className="pt-8 pb-20 md:pt-12 md:pb-28 bg-white" aria-labelledby="team-heading">
       <div className="max-w-[1440px] mx-auto px-6 md:px-20">
@@ -79,25 +82,27 @@ function TeamGrid() {
         </RevealWrapper>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {team.map((member, i) => (
+          {members.map((member, i) => (
             <RevealWrapper key={member.name} delay={i * 0.1}>
               <div className="group">
-                <Link href={`/team/${member.slug}`} className="block overflow-hidden aspect-[3/4] mb-5 relative bg-[#F8F9FA]">
+                <Link href={`/team/${member.slug}`} className="block overflow-hidden aspect-[3/4] mb-5 relative bg-[#F8F9FA] rounded-xl border border-gray-100">
                   {member.image && member.image.trim().length > 0 ? (
                     <Image
                       src={member.image}
                       alt={member.name}
                       fill
+                      unoptimized={member.image.startsWith('data:')}
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center border border-[#E5E7EB]">
-                      <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-30 group-hover:opacity-60 transition-opacity duration-300">
-                        <line x1="10" y1="10" x2="50" y2="50" stroke="#0D7A9E" strokeWidth="1" strokeDasharray="4 4" />
-                        <line x1="50" y1="10" x2="10" y2="50" stroke="#0D7A9E" strokeWidth="1" strokeDasharray="4 4" />
-                        <rect x="15" y="15" width="30" height="30" stroke="#0D7A9E" strokeWidth="1" fill="none" />
-                      </svg>
+                    <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[#F8F9FA] to-[#E5E7EB]">
+                      <span className="font-serif text-3xl font-light text-[#0D7A9E] mb-2">
+                        {member.name.split(' ').map(n => n[0]).join('')}
+                      </span>
+                      <span className="font-sans text-[10px] tracking-[0.15em] uppercase text-[#6B7280]">
+                        {member.title}
+                      </span>
                     </div>
                   )}
                   {/* Node connection indicator */}
@@ -157,12 +162,14 @@ function AboutCTA() {
 }
 
 // --- ABOUT PAGE ---
-export default function AboutPage() {
+export default async function AboutPage() {
+  const teamMembers = await readStoreAsync<TeamMember[]>('team.json', getTeam());
+
   return (
     <>
       <AboutHero />
       <StudioStory />
-      <TeamGrid />
+      <TeamGrid members={teamMembers} />
       <AboutTestimonials />
       <AboutCTA />
     </>

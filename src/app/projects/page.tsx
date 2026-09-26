@@ -4,14 +4,20 @@ import { ArrowRight } from 'lucide-react';
 import RevealWrapper from '@/components/ui/RevealWrapper';
 import NodeMesh from '@/components/ui/NodeMesh';
 import ProjectGrid from '@/components/sections/projects/ProjectGrid';
-
+import { getProjects, Project } from '@/lib/projects';
+import { readStoreAsync } from '@/lib/cms-store';
 import { getPageMetadata } from '@/lib/seo';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export function generateMetadata(): Metadata {
   return getPageMetadata('projects');
 }
 
-export default function ProjectsPage() {
+export default async function ProjectsPage() {
+  const initialProjects = await readStoreAsync<Project[]>('projects.json', getProjects());
+
   return (
     <>
       {/* Hero */}
@@ -39,7 +45,7 @@ export default function ProjectsPage() {
       {/* Project Grid */}
       <section className="bg-[#F8F9FA] py-2" aria-label="Project gallery">
         <div className="max-w-[1440px] mx-auto px-6 md:px-20 py-12">
-          <ProjectGrid />
+          <ProjectGrid initialProjects={initialProjects} />
         </div>
       </section>
 

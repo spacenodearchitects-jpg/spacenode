@@ -21,13 +21,13 @@ function findProjectBySlug(projects: Project[], targetSlug: string): Project | u
 
   return projects.find((p) => {
     if (!p) return false;
+    const pId = (p.id || '').toLowerCase().trim();
     const pSlug = (p.slug || '').toLowerCase().trim();
     const pCleanSlug = pSlug.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const pNameSlug = (p.name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
     return (
-      p.id === targetSlug ||
-      p.id === rawSlug ||
+      pId === rawSlug ||
       pSlug === rawSlug ||
       pCleanSlug === cleanSlug ||
       pNameSlug === cleanSlug
@@ -59,18 +59,23 @@ export default async function ProjectDetailPage({ params }: Props) {
     .filter((p) => p.slug !== project.slug && p.id !== project.id && p.category === project.category)
     .slice(0, 3);
 
+  const heroImageSrc = project.heroImage || project.image;
+
   return (
     <>
       {/* Hero */}
       <section className="relative h-[80vh] min-h-[600px] flex items-end overflow-hidden" aria-label={`${project.name} hero`}>
-        <Image
-          src={project.heroImage || project.image}
-          alt={project.name}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
+        {heroImageSrc && (
+          <Image
+            src={heroImageSrc}
+            alt={project.name}
+            fill
+            priority
+            unoptimized={heroImageSrc.startsWith('data:')}
+            sizes="100vw"
+            className="object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A2333]/90 via-[#0A2333]/30 to-transparent" />
         <div className="absolute inset-0 opacity-20">
           <NodeMesh variant="hero" animated={false} />
@@ -86,13 +91,13 @@ export default async function ProjectDetailPage({ params }: Props) {
 
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-20 pb-16 w-full">
           <div className="flex flex-wrap gap-6 mb-6">
-            <span className="flex items-center gap-1.5 font-sans text-[10px] tracking-[0.15em] uppercase text-[#6EB8D0]">
+            <span className="flex items-center gap-1.5 font-sans text-[10px] tracking-[0.15em] uppercase text-[#6EB8D0] font-semibold">
               <Tag size={11} /> {project.category}
             </span>
-            <span className="flex items-center gap-1.5 font-sans text-[10px] tracking-[0.15em] uppercase text-white/50">
+            <span className="flex items-center gap-1.5 font-sans text-[10px] tracking-[0.15em] uppercase text-white/70">
               <MapPin size={11} /> {project.location}
             </span>
-            <span className="flex items-center gap-1.5 font-sans text-[10px] tracking-[0.15em] uppercase text-white/50">
+            <span className="flex items-center gap-1.5 font-sans text-[10px] tracking-[0.15em] uppercase text-white/70">
               <Calendar size={11} /> {project.year}
             </span>
           </div>
@@ -103,11 +108,40 @@ export default async function ProjectDetailPage({ params }: Props) {
       </section>
 
       {/* Project Story */}
-      <section className="py-32 md:py-40 bg-white" aria-label="Project story">
-        <div className="max-w-[1440px] mx-auto px-6 md:px-20">
-          <RevealWrapper>
-            <p className="font-serif text-2xl md:text-3xl text-[#161616] leading-relaxed max-w-4xl">{project.description}</p>
-          </RevealWrapper>
+      <section className="py-24 md:py-32 bg-white" aria-label="Project story">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-20 space-y-12">
+          {project.description && (
+            <div>
+              <span className="font-sans text-[11px] font-semibold tracking-[0.25em] uppercase text-[#0D7A9E] block mb-4">
+                Overview
+              </span>
+              <p className="font-serif text-2xl md:text-3xl text-[#161616] leading-relaxed max-w-4xl">{project.description}</p>
+            </div>
+          )}
+
+          {/* Challenge, Approach & Solution Grid */}
+          {(project.challenge || project.approach || project.solution) && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12 border-t border-gray-100">
+              {project.challenge && (
+                <div>
+                  <h3 className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-[#0D7A9E] mb-3">The Challenge</h3>
+                  <p className="font-sans font-light text-sm text-[#6B7280] leading-relaxed">{project.challenge}</p>
+                </div>
+              )}
+              {project.approach && (
+                <div>
+                  <h3 className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-[#0D7A9E] mb-3">The Approach</h3>
+                  <p className="font-sans font-light text-sm text-[#6B7280] leading-relaxed">{project.approach}</p>
+                </div>
+              )}
+              {project.solution && (
+                <div>
+                  <h3 className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-[#0D7A9E] mb-3">The Solution</h3>
+                  <p className="font-sans font-light text-sm text-[#6B7280] leading-relaxed">{project.solution}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -122,6 +156,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                     src={img}
                     alt={`${project.name} — view ${i + 1}`}
                     fill
+                    unoptimized={img.startsWith('data:')}
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover hover:scale-105 transition-transform duration-700"
                   />
@@ -147,10 +182,11 @@ export default async function ProjectDetailPage({ params }: Props) {
             </RevealWrapper>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {related.map((p, i) => (
-                <RevealWrapper key={p.id} delay={i * 0.1}>
-                  <Link href={`/projects/${p.slug}`} className="group block">
-                    <div className="overflow-hidden aspect-[4/3] mb-4 relative">
+                <RevealWrapper key={p.id || p.slug} delay={i * 0.1}>
+                  <Link href={`/projects/${p.slug || p.id}`} className="group block">
+                    <div className="overflow-hidden aspect-[4/3] mb-4 relative rounded-xl">
                       <Image src={p.image} alt={p.name} fill
+                        unoptimized={p.image.startsWith('data:')}
                         sizes="(max-width: 768px) 100vw, 33vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-700" />
                     </div>

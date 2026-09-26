@@ -4,26 +4,37 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import RevealWrapper from '@/components/ui/RevealWrapper';
 import NodeMesh from '@/components/ui/NodeMesh';
-import { getTeam } from '@/data/team';
+import { getTeam, TeamMember } from '@/data/team';
+import { readStoreAsync } from '@/lib/cms-store';
 
-export function generateStaticParams() {
-  const members = getTeam();
-  return members.map((member) => ({
-    slug: member.slug,
-  }));
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+function findTeamMember(members: TeamMember[], slug: string): TeamMember | undefined {
+  const rawSlug = decodeURIComponent(slug || '').toLowerCase().trim();
+  const cleanSlug = rawSlug.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  return members.find((m) => {
+    if (!m) return false;
+    const mSlug = (m.slug || '').toLowerCase().trim();
+    const mCleanSlug = mSlug.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const mNameSlug = (m.name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    return mSlug === rawSlug || mCleanSlug === cleanSlug || mNameSlug === cleanSlug;
+  });
 }
 
 export default async function TeamMemberPage({ params }: { params: Promise<{ slug: string }> }) {
-  const resolvedParams = await params;
-  const teamMembers = getTeam();
-  const member = teamMembers.find((m) => m.slug === resolvedParams.slug);
+  const { slug } = await params;
+  const teamMembers = await readStoreAsync<TeamMember[]>('team.json', getTeam());
+  const member = findTeamMember(teamMembers, slug);
 
   if (!member) {
     notFound();
   }
 
   return (
-    <div className="min-h-screen bg-white pt-24 pb-20">
+    <div className="min-h-screen bg-white pt-32 pb-20">
       <div className="max-w-[1440px] mx-auto px-6 md:px-20">
         <RevealWrapper>
           <Link href="/about" className="inline-flex items-center gap-2 font-sans text-xs font-semibold tracking-[0.1em] uppercase text-[#0D7A9E] mb-12 hover:text-[#161616] transition-colors">
@@ -36,12 +47,13 @@ export default async function TeamMemberPage({ params }: { params: Promise<{ slu
           {/* Left Side: Large Photo */}
           <div className="lg:col-span-5 relative">
             <RevealWrapper direction="up">
-              <div className="relative aspect-[3/4] w-full bg-[#F8F9FA] overflow-hidden border border-[#E5E7EB]">
+              <div className="relative aspect-[3/4] w-full bg-[#F8F9FA] overflow-hidden border border-[#E5E7EB] rounded-2xl">
                 {member.image && member.image.trim().length > 0 ? (
                   <Image
                     src={member.image}
                     alt={member.name}
                     fill
+                    unoptimized={member.image.startsWith('data:')}
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover grayscale"
                     priority
